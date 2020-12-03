@@ -30,28 +30,42 @@ main() {
     });
 
     group('.notify', () {
-      var http = MockClient();
+      var mockHttp = MockClient();
+
       setUp(() {
         notifier = BugsnagNotifier('TestKey');
-        notifier.client = http;
-      });
+        notifier.client = mockHttp;
+        notifier.innerPackageInfo = {
+          'version': '1.1.0',
+        };
+        notifier.innerDeviceInfo = {
+          'manufacturer': 'Xiaomi',
+          'model': 'Note 7',
+          'osName': 'Android',
+          'osVersion': '12.0',
+        };
 
-      test('should send correct request header to bugsnag', () {
         when(
-          http.post(
+          mockHttp.post(
             'https://notify.bugsnag.com/',
             headers: anyNamed('headers'),
             body: anyNamed('body'),
           ),
-        ).thenReturn(null);
+        ).thenAnswer(
+          (_) async => Future<http.Response>.value(
+            http.Response('OK', 200),
+          ),
+        );
+      });
 
-        notifier.notify(
+      test('should send correct request header to bugsnag', () async {
+        await notifier.notify(
           Exception('Test Error.'),
           StackTrace.current,
         );
 
         List<dynamic> capturedParams = verify(
-          http.post(
+          mockHttp.post(
             'https://notify.bugsnag.com/',
             headers: captureAnyNamed('headers'),
             body: anyNamed('body'),
@@ -67,22 +81,14 @@ main() {
         );
       });
 
-      test('should send correct request body to bugsnag', () {
-        when(
-          http.post(
-            'https://notify.bugsnag.com/',
-            headers: anyNamed('headers'),
-            body: anyNamed('body'),
-          ),
-        ).thenReturn(null);
-
-        notifier.notify(
+      test('should send correct file in stacktrace body to bugsnag', () async {
+        await notifier.notify(
           Exception('Test Error.'),
           StackTrace.current,
         );
 
         List<dynamic> capturedParams = verify(
-          http.post(
+          mockHttp.post(
             'https://notify.bugsnag.com/',
             headers: anyNamed('headers'),
             body: captureAnyNamed('body'),

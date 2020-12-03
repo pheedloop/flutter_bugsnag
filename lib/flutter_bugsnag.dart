@@ -23,8 +23,10 @@ class BugsnagNotifier {
   final String _apiKey;
   String _releaseStage;
   Map<String, String> _user;
-  PackageInfo _innerPackageInfo;
-  Map<String, String> _innerDeviceInfo;
+  @visibleForTesting
+  Map<String, String> innerPackageInfo;
+  @visibleForTesting
+  Map<String, String> innerDeviceInfo;
   @visibleForTesting
   var client = http.Client();
 
@@ -34,24 +36,27 @@ class BugsnagNotifier {
   }
 
   /// Get the package information of the current device
-  Future<PackageInfo> get _packageInfo async {
-    if (this._innerPackageInfo != null) {
-      return this._innerPackageInfo;
+  Future<Map<String, String>> get _packageInfo async {
+    if (this.innerPackageInfo != null) {
+      return this.innerPackageInfo;
     }
 
-    this._innerPackageInfo = await PackageInfo.fromPlatform();
-    return this._innerPackageInfo;
+    PackageInfo packageInfo = await PackageInfo.fromPlatform();
+    this.innerPackageInfo = {
+      'version': packageInfo.version,
+    };
+    return this.innerPackageInfo;
   }
 
   /// Get the manufactuer, model, osName and osVersion of the device
   Future<Map<String, String>> get _deviceInfo async {
-    if (this._innerDeviceInfo != null) {
-      return this._innerDeviceInfo;
+    if (this.innerDeviceInfo != null) {
+      return this.innerDeviceInfo;
     }
 
     if (Platform.isAndroid) {
       AndroidDeviceInfo android = await DeviceInfoPlugin().androidInfo;
-      this._innerDeviceInfo = {
+      this.innerDeviceInfo = {
         'manufacturer': android.manufacturer,
         'model': android.model,
         'osName': 'Android',
@@ -59,7 +64,7 @@ class BugsnagNotifier {
       };
     } else if (Platform.isIOS) {
       IosDeviceInfo ios = await DeviceInfoPlugin().iosInfo;
-      this._innerDeviceInfo = {
+      this.innerDeviceInfo = {
         'manufacturer': 'Apple',
         'model': ios.model,
         'osName': 'iOS',
@@ -67,7 +72,7 @@ class BugsnagNotifier {
       };
     }
 
-    return this._innerDeviceInfo;
+    return this.innerDeviceInfo;
   }
 
   /// Creates a new bugsnag reporter with your Bugsnag API key and [releaseState]
@@ -106,18 +111,18 @@ class BugsnagNotifier {
   ///   bugsnagNotifierInstance.notify(error, stackTrace)
   /// }
   /// ```
-  void notify(
+  Future<void> notify(
     Exception error,
     StackTrace stackTrace, {
     ErrorSeverity severity = ErrorSeverity.error,
-  }) {
+  }) async {
     Map<String, dynamic> exception = {
       'errorClass': error.runtimeType.toString(),
       'message': error.toString(),
       'stacktrace': this._parseStackTrace(stackTrace),
     };
 
-    this._sendError([exception], severity);
+    await this._sendError([exception], severity);
   }
 
   /// Convert stacktrace to list of bugsnag stacktrace objects
@@ -154,12 +159,12 @@ class BugsnagNotifier {
   }
 
   /// Notify bugsnag of the [errors]
-  void _sendError(
+  Future<void> _sendError(
     List<Map<String, dynamic>> errors,
     ErrorSeverity severity,
   ) async {
     try {
-      PackageInfo packageInfo = await this._packageInfo;
+      Map<String, String> packageInfo = await this._packageInfo;
       Map<String, String> deviceInfo = await this._deviceInfo;
 
       Map<String, String> headers = {
@@ -180,7 +185,7 @@ class BugsnagNotifier {
         'events': [
           {
             'app': {
-              'version': packageInfo.version,
+              'version': packageInfo['version'],
               'releaseStage': this._releaseStage,
             },
             'device': deviceInfo,
@@ -198,14 +203,14 @@ class BugsnagNotifier {
         body: jsonEncode(requestBody),
       );
 
-      if (response.body.toLowerCase() != 'OK') {
+      if (!response.body.toLowerCase().contains('ok')) {
         throw Exception('Bugsnag did not accept error request format.');
       }
     } catch (error, stackTrace) {
       print(
-          '-----------------------------------------------------------------');
+          '-------------------------FLUTTER_BUGSNAG-------------------------');
       print(
-          'Errored while reporting to bugsnag:\nReport the issue here: https://github.com/pheedloop/flutter_bugsnag/issues/new?labels=bug&template=bug.md');
+          'Errored while reporting to bugsnag:\nReport the issue here: https://github.com/pheedloop/flutter_bugsnag/issues/new?labels=bug&template=bug.md\n\n');
       print(error);
       print(stackTrace);
       print(
