@@ -25,7 +25,8 @@ class BugsnagNotifier {
   Map<String, String> _user;
   PackageInfo _innerPackageInfo;
   Map<String, String> _innerDeviceInfo;
-  @visibleForTesting var client = http.Client();
+  @visibleForTesting
+  var client = http.Client();
 
   /// Get the current user infomation
   Map<String, String> get user {
@@ -69,7 +70,8 @@ class BugsnagNotifier {
     return this._innerDeviceInfo;
   }
 
-  /// Creates a new bugsnag reporter
+  /// Creates a new bugsnag reporter with your Bugsnag API key and [releaseState]
+  /// which defults to production.
   ///
   /// ```dart
   /// new BugsnagNotifier('YOUR_BUGSNAG_API_KEY')

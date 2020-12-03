@@ -1,19 +1,20 @@
 # flutter_bugsnag
 
-flutter_bugsnag is a library that helps to notify your Bugsnag project of an error in your application. It is not platform-specific meaning with just this notifier will work on iOS, Android, or the web.
+flutter_bugsnag is a library that helps to notify a Bugsnag project of a runtime application error. It is not platform-specific meaning the notifier will work on iOS, Android, or the web.
 
 ## Getting Started
 
 To notify bugsnag of all uncaught errors in the application:
 
-- At the root of your application, import the library using `import 'package:flutter_bugsnag/flutter_bugsnag.dart';`
-- Initialize `BugsnagNotifier` by passing it your bugsnag project api key.
-- Hook up an anonymous function `FlutterError.onError` where you pass the `FlutterErrorDetails` exception and stack to the initialized notifier `notify` method.
+- At the root of the application, import the library using `import 'package:flutter_bugsnag/flutter_bugsnag.dart';`
+- Hook up an anonymous function to `FlutterError.onError`.
+- In the anonymous function, initialize `BugsnagNotifier` by passing it the bugsnag project API key.
+- Pass the `FlutterErrorDetails` (usually the first parameter of the anonymous function) exception and stack to the initialized notifier `notify` method.
 
 ```dart
 main() {
   FlutterError.onError = (FlutterErrorDetails details) {
-    BugsnagNotifier bugsnagNotifier = BugsnagNotifier('your_bugsnag_project_api_key');
+    BugsnagNotifier bugsnagNotifier = BugsnagNotifier('the_bugsnag_project_api_key');
     bugsnagNotifier.notify(details.exception, details.stack);
   };
 
@@ -21,4 +22,32 @@ main() {
     ...
   );
 }
+```
+
+### None Error Notification
+
+It is possible to notify bugsnag of other less severer issues py passing a named argument to `.notify`
+
+```dart
+try {
+  /// Erroring code
+} catch (error, stackTrace) {
+  bugsnagNotifier.notify(
+    details.exception,
+    details.stack,
+    severity: ErrorSeverity.warning,
+  );
+}
+```
+
+### Adding User Info to Error
+
+To notify bugsnag of the user that experienced the issue, call `.addUser` on the notifier instance.
+
+```dart
+notifier.addUser(
+  userId: 'USR123',
+  userName: 'John Doe',
+  userEmail: 'john.doe@example.com',
+);
 ```
