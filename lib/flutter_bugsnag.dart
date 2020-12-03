@@ -41,10 +41,16 @@ class BugsnagNotifier {
       return this.innerPackageInfo;
     }
 
-    PackageInfo packageInfo = await PackageInfo.fromPlatform();
-    this.innerPackageInfo = {
-      'version': packageInfo.version,
-    };
+    if (kIsWeb) {
+      this.innerPackageInfo = {
+        'version': 'web-version',
+      };
+    } else {
+      PackageInfo packageInfo = await PackageInfo.fromPlatform();
+      this.innerPackageInfo = {
+        'version': packageInfo.version,
+      };
+    }
     return this.innerPackageInfo;
   }
 
@@ -54,22 +60,24 @@ class BugsnagNotifier {
       return this.innerDeviceInfo;
     }
 
-    if (Platform.isAndroid) {
-      AndroidDeviceInfo android = await DeviceInfoPlugin().androidInfo;
-      this.innerDeviceInfo = {
-        'manufacturer': android.manufacturer,
-        'model': android.model,
-        'osName': 'Android',
-        'osVersion': android.version.release,
-      };
-    } else if (Platform.isIOS) {
-      IosDeviceInfo ios = await DeviceInfoPlugin().iosInfo;
-      this.innerDeviceInfo = {
-        'manufacturer': 'Apple',
-        'model': ios.model,
-        'osName': 'iOS',
-        'osVersion': ios.systemVersion,
-      };
+    if (!kIsWeb) {
+      if (Platform.isAndroid) {
+        AndroidDeviceInfo android = await DeviceInfoPlugin().androidInfo;
+        this.innerDeviceInfo = {
+          'manufacturer': android.manufacturer,
+          'model': android.model,
+          'osName': 'Android',
+          'osVersion': android.version.release,
+        };
+      } else if (Platform.isIOS) {
+        IosDeviceInfo ios = await DeviceInfoPlugin().iosInfo;
+        this.innerDeviceInfo = {
+          'manufacturer': 'Apple',
+          'model': ios.model,
+          'osName': 'iOS',
+          'osVersion': ios.systemVersion,
+        };
+      }
     }
 
     return this.innerDeviceInfo;
