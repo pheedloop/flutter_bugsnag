@@ -51,3 +51,7 @@ notifier.addUser(
   userEmail: 'john.doe@example.com',
 );
 ```
+
+### Gotcha
+
+There is a [reported issue](https://github.com/flutter/flutter/issues/48972) were `FlutterError.onError` is not called on some uncaught error cases. Some solutions have been suggested in the thread.

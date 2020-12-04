@@ -23,12 +23,8 @@ class BugsnagNotifier {
   final String _apiKey;
   String _releaseStage;
   Map<String, String> _user;
-  @visibleForTesting
-  Map<String, String> innerPackageInfo;
-  @visibleForTesting
-  Map<String, String> innerDeviceInfo;
-  @visibleForTesting
-  var client = http.Client();
+  Map<String, String> _innerPackageInfo;
+  Map<String, String> _innerDeviceInfo;
 
   /// Get the current user infomation
   Map<String, String> get user {
@@ -37,33 +33,33 @@ class BugsnagNotifier {
 
   /// Get the package information of the current device
   Future<Map<String, String>> get _packageInfo async {
-    if (this.innerPackageInfo != null) {
-      return this.innerPackageInfo;
+    if (this._innerPackageInfo != null) {
+      return this._innerPackageInfo;
     }
 
     if (kIsWeb) {
-      this.innerPackageInfo = {
+      this._innerPackageInfo = {
         'version': 'web-version',
       };
     } else {
       PackageInfo packageInfo = await PackageInfo.fromPlatform();
-      this.innerPackageInfo = {
+      this._innerPackageInfo = {
         'version': packageInfo.version,
       };
     }
-    return this.innerPackageInfo;
+    return this._innerPackageInfo;
   }
 
   /// Get the manufactuer, model, osName and osVersion of the device
   Future<Map<String, String>> get _deviceInfo async {
-    if (this.innerDeviceInfo != null) {
-      return this.innerDeviceInfo;
+    if (this._innerDeviceInfo != null) {
+      return this._innerDeviceInfo;
     }
 
     if (!kIsWeb) {
       if (Platform.isAndroid) {
         AndroidDeviceInfo android = await DeviceInfoPlugin().androidInfo;
-        this.innerDeviceInfo = {
+        this._innerDeviceInfo = {
           'manufacturer': android.manufacturer,
           'model': android.model,
           'osName': 'Android',
@@ -71,7 +67,7 @@ class BugsnagNotifier {
         };
       } else if (Platform.isIOS) {
         IosDeviceInfo ios = await DeviceInfoPlugin().iosInfo;
-        this.innerDeviceInfo = {
+        this._innerDeviceInfo = {
           'manufacturer': 'Apple',
           'model': ios.model,
           'osName': 'iOS',
@@ -80,7 +76,7 @@ class BugsnagNotifier {
       }
     }
 
-    return this.innerDeviceInfo;
+    return this._innerDeviceInfo;
   }
 
   /// Creates a new bugsnag reporter with your Bugsnag API key and [releaseState]
@@ -114,23 +110,23 @@ class BugsnagNotifier {
   ///
   /// ```dart
   /// try {
-  ///   throw Exception('Application error.');
+  ///   throw Error('Application error.');
   /// } catch (error, stackTrace) {
   ///   bugsnagNotifierInstance.notify(error, stackTrace)
   /// }
   /// ```
   Future<void> notify(
-    Exception error,
+    dynamic error,
     StackTrace stackTrace, {
     ErrorSeverity severity = ErrorSeverity.error,
   }) async {
-    Map<String, dynamic> exception = {
+    Map<String, dynamic> errors = {
       'errorClass': error.runtimeType.toString(),
       'message': error.toString(),
       'stacktrace': this._parseStackTrace(stackTrace),
     };
 
-    await this._sendError([exception], severity);
+    await this._sendError([errors], severity);
   }
 
   /// Convert stacktrace to list of bugsnag stacktrace objects
@@ -205,7 +201,7 @@ class BugsnagNotifier {
       };
 
       print('Reporting to bugsnag...');
-      var response = await client.post(
+      var response = await http.post(
         'https://notify.bugsnag.com/',
         headers: headers,
         body: jsonEncode(requestBody),
@@ -223,8 +219,6 @@ class BugsnagNotifier {
       print(stackTrace);
       print(
           '-----------------------------------------------------------------');
-    } finally {
-      client.close();
     }
   }
 }
