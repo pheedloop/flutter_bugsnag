@@ -1,11 +1,11 @@
 name: flutter_bugsnag
 description: A bugsnag reporter for flutter projects.
-version: 0.0.1
+version: 0.1.0-nullsafety.0
 homepage: https://github.com/pheedloop/flutter_bugsnag
 
 environment:
   sdk: '>=2.12.0 <3.0.0'
-  flutter: ">=1.17.0"
+  flutter: ">=2.0.0"
 
 dependencies:
   flutter:
