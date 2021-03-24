@@ -7,7 +7,7 @@ class MockClient extends Mock implements http.Client {}
 
 main() {
   group('BugsnagNotifier', () {
-    BugsnagNotifier notifier;
+    late BugsnagNotifier notifier;
 
     group('.addUser', () {
       setUp(() {
