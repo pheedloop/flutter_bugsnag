@@ -32,9 +32,9 @@ class BugsnagNotifier {
   }
 
   /// Get the package information of the current device
-  Future<Map<String, String>?> get _packageInfo async {
+  Future<Map<String, String>> get _packageInfo async {
     if (this._innerPackageInfo != null) {
-      return this._innerPackageInfo;
+      return this._innerPackageInfo!;
     }
 
     if (kIsWeb) {
@@ -47,7 +47,7 @@ class BugsnagNotifier {
         'version': packageInfo.version,
       };
     }
-    return this._innerPackageInfo;
+    return this._innerPackageInfo!;
   }
 
   /// Get the manufactuer, model, osName and osVersion of the device
@@ -168,7 +168,7 @@ class BugsnagNotifier {
     ErrorSeverity severity,
   ) async {
     try {
-      Map<String, String> packageInfo = await (this._packageInfo as FutureOr<Map<String, String>>);
+      Map<String, String> packageInfo = await this._packageInfo;
       Map<String, String>? deviceInfo = await this._deviceInfo;
 
       Map<String, String> headers = {
