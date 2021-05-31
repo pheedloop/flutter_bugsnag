@@ -1,11 +1,11 @@
 library flutter_bugsnag;
 
+import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 
 import 'package:device_info/device_info.dart';
 import 'package:flutter/foundation.dart';
-import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:package_info/package_info.dart';
 
@@ -21,20 +21,20 @@ enum ErrorSeverity {
 
 class BugsnagNotifier {
   final String _apiKey;
-  String _releaseStage;
-  Map<String, String> _user;
-  Map<String, String> _innerPackageInfo;
-  Map<String, String> _innerDeviceInfo;
+  String? _releaseStage;
+  Map<String, String>? _user;
+  Map<String, String>? _innerPackageInfo;
+  Map<String, String>? _innerDeviceInfo;
 
   /// Get the current user infomation
-  Map<String, String> get user {
+  Map<String, String>? get user {
     return this._user;
   }
 
   /// Get the package information of the current device
   Future<Map<String, String>> get _packageInfo async {
     if (this._innerPackageInfo != null) {
-      return this._innerPackageInfo;
+      return this._innerPackageInfo!;
     }
 
     if (kIsWeb) {
@@ -47,11 +47,11 @@ class BugsnagNotifier {
         'version': packageInfo.version,
       };
     }
-    return this._innerPackageInfo;
+    return this._innerPackageInfo!;
   }
 
   /// Get the manufactuer, model, osName and osVersion of the device
-  Future<Map<String, String>> get _deviceInfo async {
+  Future<Map<String, String>?> get _deviceInfo async {
     if (this._innerDeviceInfo != null) {
       return this._innerDeviceInfo;
     }
@@ -95,9 +95,9 @@ class BugsnagNotifier {
   /// addUser(userId: 'USR123', userName: 'John Doe', userEmail: 'john.doe@example.com')
   /// ```
   void addUser({
-    @required String userId,
-    @required String userName,
-    @required String userEmail,
+    required String userId,
+    required String userName,
+    required String userEmail,
   }) {
     this._user = {
       'id': userId,
@@ -169,7 +169,7 @@ class BugsnagNotifier {
   ) async {
     try {
       Map<String, String> packageInfo = await this._packageInfo;
-      Map<String, String> deviceInfo = await this._deviceInfo;
+      Map<String, String>? deviceInfo = await this._deviceInfo;
 
       Map<String, String> headers = {
         'Content-Type': 'application/json',
@@ -202,7 +202,7 @@ class BugsnagNotifier {
 
       print('Reporting to bugsnag...');
       var response = await http.post(
-        'https://notify.bugsnag.com/',
+        Uri.parse('https://notify.bugsnag.com/'),
         headers: headers,
         body: jsonEncode(requestBody),
       );
